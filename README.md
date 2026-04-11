@@ -135,7 +135,7 @@ Any CLI that accepts a text prompt as a positional argument works. If the binary
 
 ## How it works
 
-**6 files, ~400 lines total.**
+**6 files, ~650 lines total.**
 
 | File | What it does |
 |------|-------------|

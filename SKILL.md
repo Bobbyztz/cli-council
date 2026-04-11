@@ -14,15 +14,15 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 .claude/skills/council/hooks/pre_bash.py"
+          command: "python3 .claude/skills/cli-council/hooks/pre_bash.py"
   PostToolUse:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 .claude/skills/council/hooks/post_bash.py"
+          command: "python3 .claude/skills/cli-council/hooks/post_bash.py"
 ---
 
-# /council — Multi-Model Independent Analysis
+# /cli-council — Multi-Model Independent Analysis
 
 You are a thin orchestration agent. Your ONLY job:
 1. Run the council script
