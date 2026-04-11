@@ -4,56 +4,48 @@
 
 **Tweet 1 (hook)**
 
-I spent an hour trying to get Codex to review my Claude Code session.
+I tried to get Codex to review my Claude Code session in Warp.
 
-Tried Warp (left-right split), Conductor (worktree handoff), cmux (pane management).
+Left pane: Claude Code. Right pane: Codex. Should be simple.
 
-None of them worked.
-
-The actual problem was embarrassingly simple.
+It wasn't. And the reason surprised me.
 
 **Tweet 2**
 
 Here's what I wanted:
 
-I'm deep in a Claude Code session — we've discussed a design, read files, made 20 decisions. Now I want Codex (or Gemini) to check my blind spots.
+I'm deep in a Claude Code session — we've discussed a design, read files, made 20 decisions. Now I want Codex to check my blind spots.
 
 The obvious move: open another terminal, start Codex, and... re-explain everything from scratch.
 
 **Tweet 3**
 
-So I tried the "AI terminal" tools everyone recommends:
+Warp promises block-level context sharing between panes. Sounds perfect.
 
-Warp: "Use the sparkles icon to attach blocks as context"
-Me: There is no sparkles icon. Claude Code's TUI swallowed it.
+"Use the sparkles icon to attach blocks as context"
+→ No sparkles icon. Claude Code's TUI hides Warp's block decorations.
 
-Warp: "Try Cmd+↑ to attach blocks"
-Me: That just turns the block blue. Codex's TUI ate the shortcut.
+"Try Cmd+��� to attach blocks"
+→ Just turns the block blue. Codex's TUI captures the shortcut.
+
+Right-click menu? No "attach as context" option either.
 
 **Tweet 4**
 
-Conductor: "One-click handoff between agents with worktree isolation"
+After trying every suggested shortcut and menu, the final "solution" was:
 
-Sounds great — except it's a whole orchestration layer for what should be a simple data transfer.
+1. Ask Claude Code to export the conversation to FULL_CONTEXT.md
+2. Tell Codex to read FULL_CONTEXT.md
 
-cmux: Great notification ring. But for context sharing? Same story — you end up manually exporting a file.
+Just two CLI tools reading a file. Nothing to do with Warp at all.
 
 **Tweet 5**
 
-After all that, the "solution" was:
+This made me realize: the problem was never about the terminal.
 
-1. Ask Claude Code to export the full conversation to FULL_CONTEXT.md
-2. Tell Codex to read FULL_CONTEXT.md
+It's about data — how do you transfer one agent's full accumulated context to another, losslessly, without manual intervention?
 
-That's it. Nothing to do with Warp, Conductor, or cmux. Just two CLI tools reading a file.
-
-**Tweet 6**
-
-The real problem was never about terminals.
-
-It's about data: how do you transfer one agent's full accumulated context to another, losslessly, without manual intervention?
-
-Every "multi-agent terminal" is solving the wrong layer — topology (how to arrange windows) instead of memory (how to share context).
+When both agents run as TUIs, the terminal's UI features get swallowed. The context sharing layer needs to work below the UI.
 
 **Tweet 7**
 
@@ -63,7 +55,7 @@ It reads Claude Code's native session data (.jsonl), builds a transcript with fu
 
 One command. Full context. No manual export.
 
-github.com/Bobbyztz/cli-council
+https://github.com/Bobbyztz/cli-council
 
 ---
 
@@ -150,13 +142,13 @@ Binary not on $PATH? Silently skipped. No crashes.
 Install:
 
 ```bash
-git clone github.com/Bobbyztz/cli-council .claude/skills/cli-council
+git clone https://github.com/Bobbyztz/cli-council .claude/skills/cli-council
 pip install pyyaml
 ```
 
 Claude Code auto-discovers it. That's the whole setup.
 
-MIT licensed. github.com/Bobbyztz/cli-council
+MIT licensed. https://github.com/Bobbyztz/cli-council
 
 ---
 
@@ -164,59 +156,44 @@ MIT licensed. github.com/Bobbyztz/cli-council
 
 **Tweet 1 (hook)**
 
-Every "multi-agent AI terminal" in 2026 is solving the wrong problem.
+I ran Claude Code and Codex side by side in Warp. The context sharing features didn't work — both TUIs swallowed the terminal's UI hooks.
 
-They're all building better containers. Nobody is solving context transfer.
+This made me think about what "multi-agent context sharing" actually requires.
 
 **Tweet 2**
 
-The current landscape:
-
-- Warp: GPU-accelerated terminal + AI blocks
-- Conductor: worktree isolation + review panels  
-- cmux: Ghostty-native + notification rings
-- Superset: multi-agent orchestration + browser
-
-All impressive engineering. All focused on: how do I arrange multiple AI agents on screen?
-
-**Tweet 3**
-
-But the actual user need is:
+The user need is simple:
 
 "I've been talking to Claude Code for 30 minutes. I want Codex to see everything we discussed and tell me what I'm missing."
 
-This is a data problem, not a layout problem.
+Most tools frame this as a layout problem — split panes, tabs, worktrees. But it's a data problem.
+
+**Tweet 3**
+
+When both agents run as full TUIs inside a terminal, UI-level features (block attachment, sparkles icons, keyboard shortcuts for context sharing) get captured by the TUI before the terminal sees them.
+
+The context sharing layer can't live in the terminal UI. It needs to work at the data level.
 
 **Tweet 4**
 
-When you run Claude Code + Codex side by side in any of these tools, the context sharing breaks down to one of:
+The fix is obvious in retrospect:
 
-1. Manual: copy-paste or export to file
-2. Non-existent: each agent starts from zero
-3. Lossy: summaries that drop critical details
+Claude Code already stores every conversation as structured data (.jsonl). Every message, tool call, and result — already there.
 
-The terminal chrome doesn't help.
+Read it. Transform it. Pipe it to another model. No UI layer needed.
 
 **Tweet 5**
 
-The fix is obvious in retrospect:
+This is a pattern worth noticing in AI tooling:
 
-Claude Code already stores every conversation as structured data (.jsonl). Read it. Transform it. Pipe it to another model.
+We keep building better containers (terminals, orchestrators, pane managers) while the bottleneck is data flow between agents.
 
-No UI layer needed. The data was always there.
+An agent that spent 30 minutes reasoning has accumulated context worth thousands of tokens. That context is the valuable thing — not the window it's displayed in.
 
 **Tweet 6**
 
-This is a broader pattern in AI tooling:
-
-We keep building UI wrappers when the bottleneck is data flow.
-
-The agent that just spent 30 minutes reasoning has accumulated context worth thousands of tokens. Losing that context when you switch models is the real cost — not the terminal you're using.
-
-**Tweet 7**
-
 I built cli-council to solve this for myself. One command, full session context, parallel execution across models.
 
-But the deeper point: if you're building multi-agent tools, think about the memory layer, not just the topology layer.
+But the broader point: if you're building multi-agent tools, the memory layer (how agents share accumulated context) matters more than the topology layer (how you arrange them on screen).
 
-github.com/Bobbyztz/cli-council
+https://https://github.com/Bobbyztz/cli-council
