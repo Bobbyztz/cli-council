@@ -14,12 +14,12 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 .claude/skills/cli-council/hooks/pre_bash.py"
+          command: "python3 \"${CLAUDE_SKILL_DIR}/hooks/pre_bash.py\""
   PostToolUse:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 .claude/skills/cli-council/hooks/post_bash.py"
+          command: "python3 \"${CLAUDE_SKILL_DIR}/hooks/post_bash.py\""
 ---
 
 # /cli-council — Multi-Model Independent Analysis
@@ -58,6 +58,8 @@ If `$ARGUMENTS` is empty, set default: `Summarize this conversation and identify
 
 Use the venv python (has pyyaml). Fall back to system python3 if venv not found.
 
+The runner streams heartbeat lines to stderr every ~30s (`[council] HH:MM:SS codex:running(8423B,45s)`) and writes live tee files under `/tmp/council-{pid}/`. From another terminal you can `tail -F /tmp/council-*/*.stdout` to watch agents produce output in real time. Artifact dir is preserved after the run for post-mortem; only the transcript file is removed.
+
 ```bash
 VENV_PYTHON="$(pwd)/.venv/bin/python3"
 PYTHON="$VENV_PYTHON"
@@ -69,4 +71,4 @@ $PYTHON "$COUNCIL_SCRIPT" \
   --question "$ARGUMENTS"
 ```
 
-Return stdout **verbatim**. No wrapping, no commentary.
+Return stdout **verbatim**. No wrapping, no commentary. (Heartbeat and `[council]` progress lines go to stderr and are outside stdout.)

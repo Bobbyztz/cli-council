@@ -69,6 +69,11 @@ def extract_conversation(filepath: str) -> str:
 
             message = record.get("message", {})
             content_blocks = message.get("content", [])
+            # Normalize: short user messages arrive as plain strings, not
+            # block lists. Iterating a string gave chars (not dicts), so
+            # every block was skipped and the turn was silently dropped.
+            if isinstance(content_blocks, str):
+                content_blocks = [{"type": "text", "text": content_blocks}]
 
             parts = []
             for block in content_blocks:
